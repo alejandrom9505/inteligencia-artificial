@@ -1,0 +1,580 @@
+import numpy as np
+from tkinter import *
+comp1=0
+
+from ast import Pass
+from pickle import TRUE
+from tracemalloc import start
+import numpy as np
+
+class Agent:
+    def __init__(self):
+        self.found = False
+       
+    def set_things(self,tmp_start_state,tmp_final_state,tmp_queue):
+        self.start_state = tmp_start_state
+        self.final_state = tmp_final_state
+        self.queue = tmp_queue
+        self.index = self.queue.index
+        self.queue.list.append(self.start_state)
+#se sacan los hijos de las siguientes posiciones
+    def indentify_o(self,matrix):
+        
+        self.matrix=matrix
+        for i in range(len(matrix)):
+            for j in range(len(matrix[i])):
+                if matrix[i][j] == 0:
+                    return (i, j)
+
+
+    def busqueda(self):
+        solution_list = []
+        n = 0
+        while(not self.found and n <= 100000):
+            
+            node = self.queue.list[self.index]
+            if(self.compara(node)):
+                self.found = True
+                
+            else:
+                self.esp_arbol()
+                self.index += 1
+                
+            n += 1
+        if(self.found):
+            aux = self.queue.list[self.index]
+            while(aux.father != 0):
+            
+                solution_list.append(aux.matrix)
+                aux = aux.father
+        if(len(solution_list)!=0):
+
+
+            for i in range(0,len(solution_list)):
+                aux = len(solution_list)-1
+
+            
+            return solution_list
+            
+        else:
+
+            #self.show_treeseer()
+            return solution_list
+        self.solucion_arbol()    
+    def popular(self,frame,solution_list,k):
+        
+        miFrameh=Frame(frame)
+        miFrameh.pack(fill="x")
+        
+        lista=np.ones([3,3])
+
+        shape = len(solution_list[0])
+        
+        
+        
+        for i in range(shape):
+            for j in range(shape):
+                    e = Entry(miFrameh,width=3,font=("verdana",10))
+                    e.grid(row=i,column=j,sticky="nsew",ipadx=4, ipady=3) 
+                    e.insert(END,solution_list[len(solution_list)-1 -k][i][j])
+                    if(solution_list[len(solution_list)-1 -k][i][j] == 0):
+                        e5 = Entry(miFrameh,width=3,font=("verdana",10),bg="black")
+                        e5.grid(row=i,column=j,sticky="nsew",ipadx=4, ipady=3) 
+                        e5.insert(END,solution_list[len(solution_list)-1 -k][i][j])  
+
+    def controlador_evento(self,canvas):
+        '''Reset the scroll region to encompass the inner frame'''
+        canvas.configure(scrollregion=canvas.bbox("all"))
+    
+    def solucion_arbol(self,solution_list):
+
+        top= Tk()
+        nombre = ""
+        top.title("solucion")
+       
+        o=Frame(top)
+        o.pack()
+        Labeli=Label(o,text="Movimientos necesarios para llegar a la solucion:")
+        Labeli.config(font=("Verdana",20)) 
+        Labeli.pack()
+     
+        canvas = Canvas(top, borderwidth=0, background="#87CEFA")
+        frame = Frame(canvas, background="#87CEFA")
+        vsb = Scrollbar(top, orient="vertical", command=canvas.yview)
+        canvas.configure(yscrollcommand=vsb.set)
+        vsb.pack(side="right", fill="y")
+        canvas.pack(side="left", fill="both", expand=True)
+        canvas.create_window((4,4), window=frame, anchor="nw")
+        frame.bind("<Configure>", lambda event, canvas=canvas: self.controlador_evento(canvas))
+
+        if(len(solution_list)!=0):
+            for i in range(len(solution_list)):
+                nombre = i+1
+                Labela=Label(frame,text=str("Movimientos")+str(nombre)+str("."))
+                Labela.config(font=("Verdana",15),bg="white") 
+                Labela.pack()
+                self.popular(frame,solution_list,i)
+        else:
+          Labelh=Label(frame,text="No tiene solución")
+          Labelh.config(font=("Verdana",20),bg="blue") 
+          Labelh.pack()
+        top.mainloop()
+#######################
+    def esp_arbol(self):
+        a,b=self.indentify_o(self.queue.list[self.index].matrix)
+        n=len(self.queue.list[self.index].matrix)-1
+        son=[]
+        #mover la posicion 
+        if(a-1<=n and a-1>=0): ##### 1
+            son.append(self.matrix[a-1][b])
+            tmp_matrix = self.queue.list[self.index].matrix.copy()
+            aux = tmp_matrix[a][b]
+            tmp_matrix[a][b] = tmp_matrix[a-1][b] ##moviendo valor de 0
+            tmp_matrix[a-1][b]=aux
+            same = True
+            try:
+                for i in range(len(self.final_state.matrix)):
+                    for j in range(len(self.final_state.matrix[i])):
+                        if(tmp_matrix[i][j] != self.queue.list[self.index].father.matrix[i][j]):
+                            same = False
+
+                if(same == False):
+                    branch = Node(self.queue.list[self.index],tmp_matrix)
+                    self.queue.list.append(branch) 
+            except:
+                branch = Node(self.queue.list[self.index],tmp_matrix)
+                self.queue.list.append(branch)
+
+        if(b+1<=n and b+1>=0): ##### 2
+            son.append(self.matrix[a][b+1])
+            tmp_matrix = self.queue.list[self.index].matrix.copy()
+            aux = tmp_matrix[a][b]
+            tmp_matrix[a][b] = tmp_matrix[a][b+1] ##moviendo valor de 0
+            tmp_matrix[a][b+1]=aux
+            same = True
+            try:
+                for i in range(len(self.final_state.matrix)):
+                    for j in range(len(self.final_state.matrix[i])):
+                        if(tmp_matrix[i][j] != self.queue.list[self.index].father.matrix[i][j]):
+                            same = False
+
+                if(same == False):
+                    branch = Node(self.queue.list[self.index],tmp_matrix)
+                    self.queue.list.append(branch)
+            except:
+                branch = Node(self.queue.list[self.index],tmp_matrix)
+                self.queue.list.append(branch)
+                
+        if(a+1<=n and a+1>=0): ##### 3
+            son.append(self.matrix[a+1][b])
+            tmp_matrix = self.queue.list[self.index].matrix.copy()
+            aux = tmp_matrix[a][b]
+            tmp_matrix[a][b] = tmp_matrix[a+1][b] ##moviendo valor de 0
+            tmp_matrix[a+1][b]=aux
+            same = True
+            try:
+                for i in range(len(self.final_state.matrix)):
+                    for j in range(len(self.final_state.matrix[i])):
+                        if(tmp_matrix[i][j] != self.queue.list[self.index].father.matrix[i][j]):
+                            same = False
+                if(same == False):
+                    branch = Node(self.queue.list[self.index],tmp_matrix)
+                    self.queue.list.append(branch)
+            except:
+                branch = Node(self.queue.list[self.index],tmp_matrix)
+                self.queue.list.append(branch)
+
+        if(b-1<=n and b-1>=0): ##### 4
+            son.append(self.matrix[a][b-1])
+            tmp_matrix = self.queue.list[self.index].matrix.copy()
+            aux = tmp_matrix[a][b]
+            tmp_matrix[a][b] = tmp_matrix[a][b-1] ##moviendo valor de 0
+            tmp_matrix[a][b-1]=aux
+            same = True
+            try:
+                for i in range(len(self.final_state.matrix)):
+                    for j in range(len(self.final_state.matrix[i])):
+                        if(tmp_matrix[i][j] != self.queue.list[self.index].father.matrix[i][j]):
+                            same = False
+
+                if(same == False):
+                    branch = Node(self.queue.list[self.index],tmp_matrix)
+                    self.queue.list.append(branch)
+            except:
+                branch = Node(self.queue.list[self.index],tmp_matrix)
+                self.queue.list.append(branch)
+                
+    def compara(self,tmp_node):
+        for i in range(len(self.final_state.matrix)):
+            for j in range(len(self.final_state.matrix[i])):
+                if(self.final_state.matrix[i][j] != tmp_node.matrix[i][j]):
+                    return False
+        return True
+        
+class Node:
+    def __init__(self,father,tmp_matrix):
+        self.matrix = tmp_matrix
+        self.father = father
+        self.index = 10
+
+    def where_o(self):
+        for i in range(len(self.matrix)):
+            for j in range(len(self.matrix[i])):
+                if self.matrix[i][j] == 0:
+                    return (i, j)
+class Queue:
+    def __init__(self):
+        self.list = []
+        self.index = 0
+
+
+
+def solucion():
+    my_queue = Queue()
+    my_agent = Agent()
+    start_point,final_point = inicio_solucion()
+    startN = Node(0,start_point)
+    finalN = Node(0,final_point)
+    my_agent.set_things(startN,finalN,my_queue)
+    solution_list = my_agent.busqueda()
+    if(len(a)!=0):
+        Button(By, text="", command=agente.solucion_arbol(solution_list)).pack(side="bottom",fill="x")
+    
+def inicio_solucion():
+    if(len(a)!=0):
+        inicial=np.zeros([int(float(var.get())),int(float(var.get()))])
+        K=0
+        for i in range(int(float(var.get()))):
+                  for j in range(int(float(var.get()))):
+                      inicial[i][j]=a[K]
+                      K=K+1
+        final=np.zeros([int(float(var.get())),int(float(var.get()))])
+        conta=0
+        for i in range(int(float(var.get()))):
+               for j in range(int(float(var.get()))):
+                       conta=conta+1
+                       if(conta!=int(float(var.get()))*int(float(var.get()))):
+                           final[i][j]=conta
+                       else:
+                           final[i][j]=0
+                           
+        return(inicial,final)
+    else:
+        Labelp=Label(pt,text="No ha hecho cambios")
+        Labelp.config(font=("Verdana",12),bg="red") 
+        Labelp.pack()
+#########
+def grilla3(r):
+    m=np.zeros([int(float(var.get())),int(float(var.get()))])
+    K=0
+    for i in range(int(float(var.get()))):
+              for j in range(int(float(var.get()))):
+                  m[i][j]=int(float(r[K]))
+                  K=K+1
+    miFrame5=Frame(miFrame5p)
+    miFrame5.pack(side="left")
+    miFrame5.config(width="600",height="700") 
+    miFrame5.config(bg="black",relief="sunken")
+    for i in range(int(float(var.get()))):
+           for j in range(int(float(var.get()))):
+                   e7 = Entry(miFrame5,width=3,font=("verdana",15))
+                   e7.grid(row=i,column=j,sticky="nsew",ipadx=4, ipady=3) 
+                   e7.insert(END,m[i][j])
+                   if(m[i][j]==0):
+                       e7 = Entry(miFrame5,width=3,font=("verdana",15),bg="black")
+                       e7.grid(row=i,column=j,sticky="nsew",ipadx=4, ipady=3) 
+                       e7.insert(END,m[i][j])
+def Modificar():
+    for item in miFrame.winfo_children():
+        item.destroy()
+    
+    B2=Frame(miFrame)
+    B2.pack(side="left")
+    r.set(int(float(n1.get())))
+    r2.set(int(float(n1.get())))
+
+    if(comprobante()<2):
+        v=0
+        for i in range(int(float(var.get()))*int(float(var.get()))):
+                        v=v+1
+                        if(v!=int(float(var.get()))*int(float(var.get()))):
+                            a.append(v)
+                        else:
+                            a.append(0)
+                        
+        comprobante()
+    n=[]
+    for i in range(int(float(var.get()))*int(float(var.get()))):
+               if(a[i]==int(r.get())):
+                   n.append(i)
+
+               if(a[i]==0):
+                   n.append(i)
+
+    temp=a[n[0]] 
+    a[n[0]]=a[n[1]] 
+    a[n[1]]=temp            
+
+    for item in miFrame5p.winfo_children():
+        item.destroy() 
+    grilla3(a)
+    for item in pt.winfo_children():
+        item.destroy() 
+    inicio_solucion()
+    n1.set("")
+
+
+def comprobante():
+    global comp1
+    comp1=comp1+1
+    return comp1
+
+def texto2():
+    n=StringVar()
+    
+    titulo=Label(i,text="Mueva las ficha ")
+    titulo.config(font=("Verdana",16), pady=20) 
+    titulo.pack()
+    
+    titulo=Label(i,text="Digite el numero que desea cambiar en el puzzle")
+    titulo.config(font=("Verdana",12))
+    titulo.pack()
+    n=(int(float(var.get()))*int(float(var.get())))-1
+   
+    miLabel3=Label(j,text=str(n), padx=10)
+    miLabel3.config(font=("Verdana",10)) 
+    miLabel3.pack() 
+    B.config(width="400",height="500",bg="black",relief="sunken") 
+    e = Entry(B,width=3,font=("verdana",15),textvariable=n1)
+    e.grid(row=1,column=1,sticky="nsew",ipadx=4, ipady=3)
+
+    
+    #
+    
+    btn_frame = Frame(root)
+    btn_frame.pack(side="top", pady=10)
+
+    Button(btn_frame, text="Solucion", command=solucion, height=2, width=10,bg="blue").pack(side="left")
+    Button(btn_frame, text="Modificar", command=Modificar, height=2, width=10,bg="green").pack(side="right")
+
+def grilla():
+    miFrameh=Frame(miFrame)
+    miFrameh.pack(side="left")
+    miFrameh.config(width="700",height="900",bg="black",relief="sunken") 
+    lista=np.zeros([int(float(var.get())),int(float(var.get()))])
+    a=0
+    for i in range(int(float(var.get()))):
+           for j in range(int(float(var.get()))):
+                   a=a+1
+                   if(a!=int(float(var.get()))*int(float(var.get()))):
+                       lista[i][j]=a
+                   else:
+                       lista[i][j]=0
+    
+    for i in range(int(float(var.get()))):
+           for j in range(int(float(var.get()))):
+                   e = Entry(miFrameh,width=3,font=("verdana",15))
+                   e.grid(row=i,column=j,sticky="nsew",ipadx=4, ipady=3) 
+                   e.insert(END,lista[i][j])
+                   if(lista[i][j]==0):
+                       e7 = Entry(miFrameh,width=3,font=("verdana",15),bg="black")
+                       e7.grid(row=i,column=j,sticky="nsew",ipadx=4, ipady=3) 
+                       e7.insert(END,lista[i][j])
+
+    miFrame1=Frame(root)
+    miFrame1.pack(side="left")
+    texto2()
+    for item in B1.winfo_children():
+        item.destroy()
+    for item in p.winfo_children():
+        item.destroy()  
+    for item in y.winfo_children():
+        item.destroy() 
+
+
+def texto():
+    h=Frame(y) 
+    h.config(width="625",height="200") 
+    h.pack()
+    Titulo_1=Label(h,text="Inteligencia Artificial GRUPO 04 - 2023-01")
+    Titulo_1.config(font=("Verdana",20)) 
+    Titulo_1.pack()
+    Titulo_1=Label(h,text="Seleccion del puzzle")
+    Titulo_1.config(font=("Verdana",16))
+    Titulo_1.pack(pady=10)
+   
+
+
+def create_frame(root):
+    frame = Frame(root)
+    global y
+    y=Frame(root)
+    y.pack()
+    texto()
+    global p
+    p=Frame(root)
+    p.pack()
+    root.config(bd=15)
+    
+    # Agregar el Label con el entrelineado
+    Label(p, text="\n").pack()
+    
+    var.set("Seleccione una opcion :")
+    opciones=["2","3","4","5","6"]
+    opcion=OptionMenu(p, var,*opciones)
+    opcion.config(width=20)
+    opcion.pack()
+    global B1
+    B1=Frame(root)
+    B1.pack()
+    Button(B1, text="Empieza", command=grilla,height=2, width=10,padx=10, pady=5, bg="green").pack()
+    global By
+    By=Frame(root)
+    By.pack(side="bottom")
+    global miFrame
+    miFrame=Frame(root)
+    miFrame.pack()
+    global miFrame5p
+    miFrame5p=Frame(root)
+    miFrame5p.pack(side="left")
+    global pt
+    pt=Frame(root)
+    pt.pack()
+    global i
+    i=Frame(root) 
+    i.config() 
+    i.pack()
+    global j
+    j=Frame(root)
+    j.pack()
+    global q
+    q=Frame(root)
+    q.pack()
+    global B
+    B=Frame(root)
+    B.pack()
+    global btn
+    btn=Frame(root)
+    btn.pack(side="right")
+    global btn1
+    btn1=Frame(root)
+    btn1.pack(side="left")
+    miFrame4=Frame(frame)
+    miFrame4.pack()
+    barraMenu= Menu(miFrame4)
+    root.config(menu=barraMenu) 
+
+    return frame
+
+def reset_all():
+    global frame
+    #for item in frame.winfo_children():
+        #item.destroy()
+    btn1.destroy()
+    btn.destroy()
+    B.destroy()
+    q.destroy()
+    y.destroy()
+    p.destroy()
+    #option.destroy()
+    B1.destroy()
+    #By.destroy()
+    i.destroy()
+    j.destroy()
+    miFrame.destroy()
+    miFrame5p.destroy()
+    pt.destroy()
+    frame.destroy()
+    frame = create_frame(root)
+    #frame = create_different_frame(master)
+    frame.pack()      
+root = Tk()
+agente=Agent()
+comp=IntVar()
+n1=StringVar()
+r=StringVar()
+r2=StringVar()
+r3=StringVar()
+var=StringVar()
+a=[]
+cam=[]
+frame = create_frame(root)
+frame.pack()
+root.mainloop()
+
+
+#implementacion h1  y h2
+import heapq
+import copy
+
+class Puzzle:
+    def __init__(self, data, moves=""):
+        self.data = data
+        self.moves = moves
+        self.h = 0
+        self.f = 0
+        self.blank_index = self.data.index(0)
+
+    def __lt__(self, other):
+        return self.f < other.f
+
+    def __str__(self):
+        return str(self.data)
+
+    def calculate_cost(self, goal):
+        self.h = 0
+        for i in range(len(self.data)):
+            if self.data[i] != 0 and self.data[i] != goal[i]:
+                self.h += 1
+
+    def calculate_f(self):
+        self.f = self.h
+
+    def get_neighbors(self):
+        neighbors = []
+
+        if self.blank_index not in [0, 1, 2]:
+            new_data = copy.deepcopy(self.data)
+            new_data[self.blank_index], new_data[self.blank_index-3] = new_data[self.blank_index-3], new_data[self.blank_index]
+            neighbors.append(Puzzle(new_data, self.moves+"U"))
+
+        if self.blank_index not in [6, 7, 8]:
+            new_data = copy.deepcopy(self.data)
+            new_data[self.blank_index], new_data[self.blank_index+3] = new_data[self.blank_index+3], new_data[self.blank_index]
+            neighbors.append(Puzzle(new_data, self.moves+"D"))
+
+        if self.blank_index not in [0, 3, 6]:
+            new_data = copy.deepcopy(self.data)
+            new_data[self.blank_index], new_data[self.blank_index-1] = new_data[self.blank_index-1], new_data[self.blank_index]
+            neighbors.append(Puzzle(new_data, self.moves+"L"))
+
+        if self.blank_index not in [2, 5, 8]:
+            new_data = copy.deepcopy(self.data)
+            new_data[self.blank_index], new_data[self.blank_index+1] = new_data[self.blank_index+1], new_data[self.blank_index]
+            neighbors.append(Puzzle(new_data, self.moves+"R"))
+
+        return neighbors
+
+
+def solve_puzzle(start, goal):
+    open_heap = []
+    closed_set = set()
+
+    start.calculate_cost(goal)
+    start.calculate_f()
+    heapq.heappush(open_heap, start)
+
+    while open_heap:
+        current = heapq.heappop(open_heap)
+        if current.data == goal:
+            return current.moves
+
+        closed_set.add(tuple(current.data))
+
+        for neighbor in current.get_neighbors():
+            if tuple(neighbor.data) not in closed_set:
+                neighbor.calculate_cost(goal)
+                neighbor.calculate_f()
+                heapq.heappush(open_heap, neighbor)
+
+    return "No solution found."
